@@ -1,6 +1,7 @@
 import os
 import base64
 import json
+import logging
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, FileResponse
@@ -13,6 +14,16 @@ import firebase_admin
 from firebase_admin import credentials, firestore
 from datetime import datetime
 import uuid
+
+# ── Google Cloud Logging ────────────────────────────────────────────────
+try:
+    import google.cloud.logging
+    log_client = google.cloud.logging.Client()
+    log_client.setup_logging()
+except Exception:
+    logging.basicConfig(level=logging.INFO)
+
+logger = logging.getLogger("universal-intent-bridge")
 
 app = FastAPI(title="Universal Intent Bridge - AI Logic Engine", version="1.0.0")
 
@@ -37,10 +48,37 @@ try:
             firebase_admin.initialize_app(options={"projectId": FIREBASE_PROJECT_ID})
     db = firestore.client()
 except Exception as e:
-    print(f"Firebase init skipped: {e}")
+    logger.warning(f"Firebase init skipped: {e}")
 
-# ── Gemini Client ──────────────────────────────────────────────────────────────
-gemini_client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY", ""))
+# ── Secret Manager: load GEMINI_API_KEY if running on GCP ────────────────────────
+def _load_secret(project_id: str, secret_id: str) -> str:
+    """Fetch latest secret version from Google Cloud Secret Manager."""
+    try:
+        from google.cloud import secretmanager
+        sm_client = secretmanager.SecretManagerServiceClient()
+        name = f"projects/{project_id}/secrets/{secret_id}/versions/latest"
+        response = sm_client.access_secret_version(request={"name": name})
+        return response.payload.data.decode("utf-8")
+    except Exception as e:
+        logger.warning(f"Secret Manager unavailable, falling back to env var: {e}")
+        return ""
+
+_project_id = os.environ.get("FIREBASE_PROJECT_ID", "")
+_gemini_key = (
+    _load_secret(_project_id, "GEMINI_API_KEY")
+    if _project_id
+    else os.environ.get("GEMINI_API_KEY", "")
+) or os.environ.get("GEMINI_API_KEY", "")
+
+_maps_key = (
+    _load_secret(_project_id, "MAPS_API_KEY")
+    if _project_id
+    else os.environ.get("MAPS_API_KEY", "")
+) or os.environ.get("MAPS_API_KEY", "")
+
+# ── Gemini Client ──────────────────────────────────────────────
+gemini_client = genai.Client(api_key=_gemini_key)
+logger.info("Gemini client initialized", extra={"gemini_ready": bool(_gemini_key), "maps_ready": bool(_maps_key)})
 
 # ── Pydantic Schemas (the "Guardian" layer) ────────────────────────────────────
 
@@ -133,6 +171,7 @@ async def bridge_intent(
     user_id: Optional[str] = Form(None),
 ):
     if not text_input and not audio_file and not image_file:
+        logger.warning("Bridge called with no input")
         raise HTTPException(status_code=400, detail="At least one input (text, audio, or image) is required.")
 
     parts = []
@@ -169,6 +208,11 @@ async def bridge_intent(
         data["timestamp"] = datetime.utcnow().isoformat() + "Z"
 
         result = BridgedOutput(**data)
+        logger.info(
+            "Bridge processed",
+            extra={"domain": result.domain, "severity": result.severity,
+                   "confidence": result.verification.confidence_score, "session_id": result.session_id}
+        )
 
         if db:
             doc_ref = db.collection("bridge_sessions").document(result.session_id)
@@ -177,8 +221,10 @@ async def bridge_intent(
         return result
 
     except json.JSONDecodeError as e:
+        logger.error(f"Gemini non-JSON response: {e}")
         raise HTTPException(status_code=502, detail=f"Gemini returned non-JSON response: {str(e)}")
     except Exception as e:
+        logger.error(f"Bridge processing failed: {e}")
         raise HTTPException(status_code=500, detail=f"Bridge processing failed: {str(e)}")
 
 
@@ -218,9 +264,77 @@ async def get_recent() -> dict:
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.get("/api/location-context")
+async def location_context(location: str) -> dict:
+    """Geocode a location via Google Maps and fetch live weather via Open-Meteo."""
+    import urllib.request
+    import urllib.parse
+
+    result: Dict[str, Any] = {"location": location, "map_embed_url": None, "weather": None}
+
+    if not _maps_key:
+        return result
+
+    try:
+        encoded = urllib.parse.quote(location)
+        geo_url = f"https://maps.googleapis.com/maps/api/geocode/json?address={encoded}&key={_maps_key}"
+        with urllib.request.urlopen(geo_url, timeout=5) as resp:
+            geo = json.loads(resp.read())
+
+        if geo.get("results"):
+            loc = geo["results"][0]["geometry"]["location"]
+            lat, lng = loc["lat"], loc["lng"]
+            formatted = geo["results"][0]["formatted_address"]
+
+            result["lat"] = lat
+            result["lng"] = lng
+            result["formatted_address"] = formatted
+            result["map_embed_url"] = (
+                f"https://www.google.com/maps/embed/v1/place"
+                f"?key={_maps_key}&q={urllib.parse.quote(formatted)}&zoom=13"
+            )
+            result["maps_link"] = f"https://www.google.com/maps/search/?api=1&query={encoded}"
+
+            weather_url = (
+                f"https://api.open-meteo.com/v1/forecast"
+                f"?latitude={lat}&longitude={lng}"
+                f"&current=temperature_2m,weathercode,windspeed_10m,relative_humidity_2m"
+                f"&temperature_unit=celsius&windspeed_unit=kmh&timezone=auto"
+            )
+            with urllib.request.urlopen(weather_url, timeout=5) as wresp:
+                w = json.loads(wresp.read())
+
+            current = w.get("current", {})
+            code = current.get("weathercode", 0)
+            weather_desc = {
+                0: "Clear sky", 1: "Mainly clear", 2: "Partly cloudy", 3: "Overcast",
+                45: "Foggy", 48: "Icy fog", 51: "Light drizzle", 61: "Light rain",
+                63: "Moderate rain", 65: "Heavy rain", 71: "Light snow", 73: "Moderate snow",
+                80: "Rain showers", 95: "Thunderstorm", 99: "Thunderstorm with hail"
+            }.get(code, "Unknown")
+
+            result["weather"] = {
+                "temperature_c": current.get("temperature_2m"),
+                "description": weather_desc,
+                "windspeed_kmh": current.get("windspeed_10m"),
+                "humidity_pct": current.get("relative_humidity_2m"),
+            }
+            logger.info("Location context fetched", extra={"location": formatted, "lat": lat, "lng": lng})
+    except Exception as e:
+        logger.warning(f"Location context fetch failed: {e}")
+
+    return result
+
+
 @app.get("/api/health")
 async def health():
-    return {"status": "ok", "gemini": bool(os.environ.get("GEMINI_API_KEY")), "firebase": db is not None}
+    return {
+        "status": "ok",
+        "gemini": bool(_gemini_key),
+        "firebase": db is not None,
+        "maps": bool(_maps_key),
+        "secret_manager": bool(_project_id),
+    }
 
 
 @app.get("/")

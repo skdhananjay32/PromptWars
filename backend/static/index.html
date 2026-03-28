@@ -250,7 +250,19 @@
         <div class="actions-list" id="actionsGrid" style="margin-bottom:1.25rem"></div>
 
         <div class="section-title">Verification Report</div>
-        <div class="verif-card" id="verifCard" style="margin-bottom:2rem"></div>
+        <div class="verif-card" id="verifCard" style="margin-bottom:1.25rem"></div>
+
+        <div id="locationCard" style="display:none;margin-bottom:2rem">
+          <div class="section-title">📍 Location Context</div>
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+            <div id="weatherStrip" style="display:flex;gap:1.5rem;padding:0.85rem 1rem;align-items:center;border-bottom:1px solid var(--border);flex-wrap:wrap;"></div>
+            <iframe id="mapEmbed" src="" width="100%" height="200" style="border:none;display:block;" loading="lazy" allowfullscreen referrerpolicy="no-referrer-when-downgrade"></iframe>
+            <div style="padding:0.5rem 1rem;font-size:0.72rem;color:var(--muted);display:flex;justify-content:space-between;align-items:center;">
+              <span id="mapAddress"></span>
+              <a id="mapLink" href="#" target="_blank" style="color:var(--accent);font-weight:600;text-decoration:none;font-size:0.72rem;">Open in Maps ↗</a>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div id="emptyState" style="border:1.5px dashed var(--border);border-radius:16px;padding:1.75rem;background:var(--surface);">
@@ -441,6 +453,36 @@
 
     document.getElementById('emptyState').style.display = 'none';
     document.getElementById('resultPanel').style.display = 'block';
+
+    const locationVal = d.raw_extracted_facts?.location || d.raw_extracted_facts?.place || d.raw_extracted_facts?.address;
+    if (locationVal) fetchLocationContext(locationVal);
+    else document.getElementById('locationCard').style.display = 'none';
+  }
+
+  async function fetchLocationContext(location) {
+    try {
+      const r = await fetch('/api/location-context?location=' + encodeURIComponent(location));
+      const loc = await r.json();
+      if (!loc.map_embed_url) return;
+
+      document.getElementById('mapEmbed').src = loc.map_embed_url;
+      document.getElementById('mapAddress').textContent = loc.formatted_address || location;
+      document.getElementById('mapLink').href = loc.maps_link || '#';
+
+      if (loc.weather) {
+        const w = loc.weather;
+        document.getElementById('weatherStrip').innerHTML = `
+          <span style="font-size:1.4rem">${w.temperature_c !== null ? '🌡' : ''}</span>
+          <span style="font-weight:700;font-size:1rem">${w.temperature_c !== null ? w.temperature_c + '°C' : ''}</span>
+          <span style="color:var(--muted);font-size:0.82rem">${w.description}</span>
+          <span style="color:var(--muted);font-size:0.82rem">💨 ${w.windspeed_kmh} km/h</span>
+          <span style="color:var(--muted);font-size:0.82rem">💧 ${w.humidity_pct}%</span>`;
+      }
+
+      document.getElementById('locationCard').style.display = 'block';
+    } catch(e) {
+      document.getElementById('locationCard').style.display = 'none';
+    }
   }
 
   function setLoading(on) {
