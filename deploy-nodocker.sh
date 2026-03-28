@@ -23,7 +23,7 @@ gcloud run deploy "${SERVICE}" \
   --project "${PROJECT_ID}" \
   --region "${REGION}" \
   --allow-unauthenticated \
-  --set-env-vars "GEMINI_API_KEY=${GEMINI_API_KEY}" \
+  --set-env-vars "GEMINI_API_KEY=${GEMINI_API_KEY},FIREBASE_PROJECT_ID=${GCP_PROJECT_ID}" \
   --memory 1Gi \
   --port 8000
 

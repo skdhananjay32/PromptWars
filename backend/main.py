@@ -5,8 +5,8 @@ from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, Field, validator
-from typing import Optional, List, Literal
+from pydantic import BaseModel, Field
+from typing import Optional, List, Literal, Dict, Any
 from google import genai
 from google.genai import types
 import firebase_admin
@@ -25,14 +25,19 @@ app.add_middleware(
 )
 
 # ── Firebase Init (optional, graceful fallback) ────────────────────────────────
+# Uses serviceAccountKey.json locally; Application Default Credentials on Cloud Run
 db = None
+FIREBASE_PROJECT_ID = os.environ.get("FIREBASE_PROJECT_ID", "")
 try:
-    if os.path.exists("serviceAccountKey.json"):
-        cred = credentials.Certificate("serviceAccountKey.json")
-        firebase_admin.initialize_app(cred)
-        db = firestore.client()
-except Exception:
-    pass
+    if not firebase_admin._apps:
+        if os.path.exists("serviceAccountKey.json"):
+            cred = credentials.Certificate("serviceAccountKey.json")
+            firebase_admin.initialize_app(cred)
+        elif FIREBASE_PROJECT_ID:
+            firebase_admin.initialize_app(options={"projectId": FIREBASE_PROJECT_ID})
+    db = firestore.client()
+except Exception as e:
+    print(f"Firebase init skipped: {e}")
 
 # ── Gemini Client ──────────────────────────────────────────────────────────────
 gemini_client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY", ""))
@@ -66,9 +71,9 @@ class BridgedOutput(BaseModel):
     domain: Literal["MEDICAL", "DISASTER", "TRAFFIC", "MENTAL_HEALTH", "LEGAL", "INFRASTRUCTURE", "GENERAL"]
     intent_summary: str = Field(..., min_length=10)
     severity: Literal["CRITICAL", "HIGH", "MEDIUM", "LOW"]
-    actions: List[ActionStep] = Field(..., min_items=1)
+    actions: List[ActionStep] = Field(..., min_length=1)
     verification: VerificationResult
-    raw_extracted_facts: dict
+    raw_extracted_facts: Dict[str, Any]
     timestamp: str
 
 
@@ -165,9 +170,9 @@ async def bridge_intent(
 
         result = BridgedOutput(**data)
 
-        if db and user_id:
+        if db:
             doc_ref = db.collection("bridge_sessions").document(result.session_id)
-            doc_ref.set(result.dict())
+            doc_ref.set({**result.model_dump(), "user_id": user_id or "anonymous"})
 
         return result
 
@@ -180,7 +185,7 @@ async def bridge_intent(
 # ── Endpoint: Fetch Session History ───────────────────────────────────────────
 
 @app.get("/api/history/{user_id}")
-async def get_history(user_id: str):
+async def get_history(user_id: str) -> dict:
     if not db:
         return {"sessions": [], "note": "Firebase not configured"}
     try:
@@ -190,6 +195,25 @@ async def get_history(user_id: str):
             .limit(20) \
             .stream()
         return {"sessions": [s.to_dict() for s in sessions]}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/recent")
+async def get_recent() -> dict:
+    """Returns the 5 most recent bridge sessions across all users."""
+    if not db:
+        return {"sessions": [], "note": "Firebase not configured"}
+    try:
+        sessions = db.collection("bridge_sessions") \
+            .order_by("timestamp", direction=firestore.Query.DESCENDING) \
+            .limit(5) \
+            .stream()
+        return {"sessions": [
+            {"session_id": s.id, "domain": s.get("domain"), "severity": s.get("severity"),
+             "intent_summary": s.get("intent_summary"), "timestamp": s.get("timestamp")}
+            for s in sessions
+        ]}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

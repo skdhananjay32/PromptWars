@@ -91,7 +91,8 @@
 
     /* ── Result panel ── */
     .result-panel { display: none; }
-    .result-summary-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.25rem; margin-bottom: 1rem; }
+    .result-summary-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; margin-bottom: 1.25rem; }
+    .result-divider { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
     .badges-row { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.85rem; }
     .domain-badge { padding: 0.28rem 0.7rem; border-radius: 999px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; background: #1a1a3a; border: 1px solid var(--accent); color: var(--accent); }
     .severity-badge { padding: 0.28rem 0.7rem; border-radius: 999px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; }
@@ -111,14 +112,14 @@
     .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
     .actions-list { display: flex; flex-direction: column; gap: 0.6rem; }
-    .action-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1rem 1.1rem; display: grid; grid-template-columns: 32px 1fr auto; gap: 0.75rem; align-items: start; transition: border-color 0.2s; }
-    .action-card:hover { border-color: #2a2a4a; }
+    .action-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.1rem 1.25rem; display: grid; grid-template-columns: 36px 1fr auto; gap: 1rem; align-items: start; transition: border-color 0.2s, box-shadow 0.2s; }
+    .action-card:hover { border-color: #3a3a5a; box-shadow: 0 2px 12px rgba(0,0,0,0.3); }
     .step-circle { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 800; flex-shrink: 0; margin-top: 0.1rem; }
     .step-CRITICAL { background: #2a0808; color: var(--critical); border: 1px solid rgba(239,68,68,0.5); }
     .step-HIGH     { background: #2a1200; color: var(--high);     border: 1px solid rgba(249,115,22,0.5); }
     .step-MEDIUM   { background: #2a2000; color: var(--medium);   border: 1px solid rgba(234,179,8,0.5); }
     .step-LOW      { background: #082a08; color: var(--low);      border: 1px solid rgba(34,197,94,0.5); }
-    .action-what { font-size: 0.88rem; font-weight: 600; line-height: 1.4; margin-bottom: 0.4rem; }
+    .action-what { font-size: 0.92rem; font-weight: 600; line-height: 1.5; margin-bottom: 0.5rem; }
     .action-meta { display: flex; flex-wrap: wrap; gap: 0.4rem; }
     .meta-chip { font-size: 0.7rem; padding: 0.18rem 0.5rem; border-radius: 4px; background: var(--bg); border: 1px solid var(--border); color: var(--muted); white-space: nowrap; }
     .priority-pill { padding: 0.2rem 0.55rem; border-radius: 999px; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.05em; align-self: start; white-space: nowrap; }
@@ -188,66 +189,109 @@
       </button>
     </div>
 
-  <!-- Full-width Input -->
-  <div class="input-full">
+  <!-- Two-column: Input left, Response right -->
+  <div class="two-col" style="align-items:start">
+
+    <!-- LEFT: Input -->
     <div class="input-panel">
-        <div class="input-block">
-          <div class="input-block-label">📝 Text / Paste Input</div>
-          <textarea id="textInput" placeholder="Paste messy text, scribbled notes, WhatsApp threads, medical history fragments..." oninput="updateCharCount()"></textarea>
-          <div class="char-count" id="charCount">0 chars</div>
-        </div>
+      <div class="input-block">
+        <div class="input-block-label">📝 Text / Paste Input</div>
+        <textarea id="textInput" placeholder="Paste messy text, scribbled notes, WhatsApp threads, medical history fragments..." oninput="updateCharCount()"></textarea>
+        <div class="char-count" id="charCount">0 chars</div>
+      </div>
 
-        <div class="input-block">
-          <div class="input-block-label">🖼 Drop an Image or Click to Upload</div>
-          <div class="drop-zone" id="dropZone">
-            <input type="file" id="imageInput" accept="image/*" onchange="onImageChange()">
-            <div class="drop-zone-icon">📁</div>
-            <p><span>Click to upload</span> or drag & drop</p>
-            <p>Photos, scans, handwritten notes, accident scenes</p>
-            <div class="file-name" id="imageName"></div>
+      <div class="input-block">
+        <div class="input-block-label">🖼 Drop an Image or Click to Upload</div>
+        <div class="drop-zone" id="dropZone">
+          <input type="file" id="imageInput" accept="image/*" onchange="onImageChange()">
+          <div class="drop-zone-icon">📁</div>
+          <p><span>Click to upload</span> or drag & drop</p>
+          <p>Photos, scans, handwritten notes, accident scenes</p>
+          <div class="file-name" id="imageName"></div>
+        </div>
+      </div>
+
+      <div class="input-block">
+        <div class="voice-section">
+          <div class="voice-label">🎙 Voice Input</div>
+          <button class="record-btn" id="recordBtn" onclick="toggleRecording()" aria-label="Record voice input" aria-pressed="false">🎤 Record Voice</button>
+        </div>
+      </div>
+
+      <div class="error-box" id="errorBox" role="alert"></div>
+      <button class="submit-btn" id="submitBtn" onclick="submit()" aria-label="Submit and analyze input with Gemini AI">⚡ Bridge Intent</button>
+    </div>
+
+    <!-- RIGHT: Response -->
+    <div id="responseCol">
+      <div class="loading" id="loading" style="display:none">
+        <div class="spinner"></div>
+        <p>Gemini 2.5 Flash is analyzing your input...</p>
+      </div>
+
+      <div id="resultPanel" style="display:none">
+        <div class="result-summary-card">
+          <div class="badges-row">
+            <span class="severity-badge" id="severityBadge"></span>
+            <span class="domain-badge" id="domainBadge"></span>
+            <span class="gap-badge" id="gapBadge" style="display:none"></span>
+            <span style="margin-left:auto;font-size:0.72rem;color:var(--muted)" id="timestamp"></span>
+          </div>
+          <div class="intent-text" id="intentSummary"></div>
+          <div class="confidence-row">
+            <div class="confidence-label">Confidence</div>
+            <div class="confidence-bar"><div class="confidence-fill" id="confidenceFill"></div></div>
+            <div class="confidence-val" id="confidenceVal"></div>
+            <div style="font-size:0.8rem;font-weight:600;" id="verifiedStatus"></div>
           </div>
         </div>
 
-        <div class="input-block">
-          <div class="voice-section">
-            <div class="voice-label">🎙 Voice Input</div>
-            <button class="record-btn" id="recordBtn" onclick="toggleRecording()" aria-label="Record voice input" aria-pressed="false">🎤 Record Voice</button>
-          </div>
+        <div class="section-title" id="actionTitle"></div>
+        <div class="actions-list" id="actionsGrid" style="margin-bottom:1.25rem"></div>
+
+        <div class="section-title">Verification Report</div>
+        <div class="verif-card" id="verifCard" style="margin-bottom:2rem"></div>
+      </div>
+
+      <div id="emptyState" style="border:1.5px dashed var(--border);border-radius:16px;padding:1.75rem;background:var(--surface);">
+        <div style="text-align:center;padding:1.5rem 0 1.75rem;border-bottom:1px solid var(--border);margin-bottom:1.5rem;">
+          <div style="font-size:2.5rem;margin-bottom:0.75rem;">⚡</div>
+          <div style="font-weight:700;font-size:1rem;margin-bottom:0.35rem;">Results will appear here</div>
+          <div style="font-size:0.8rem;color:var(--muted);">Select a scenario or paste your input, then hit Bridge Intent</div>
         </div>
 
-        <button class="submit-btn" id="submitBtn" onclick="submit()" aria-label="Submit and analyze input with Gemini AI">⚡ Bridge Intent</button>
-      </div>
-    </div>
-  </div>
+        <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);font-weight:600;margin-bottom:0.75rem;">Supported Domains</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:1.5rem;">
+          <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:0.6rem 0.75rem;font-size:0.8rem;">🏥 Medical Emergency</div>
+          <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:0.6rem 0.75rem;font-size:0.8rem;">🌊 Disaster Coordination</div>
+          <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:0.6rem 0.75rem;font-size:0.8rem;">🧠 Mental Health Crisis</div>
+          <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:0.6rem 0.75rem;font-size:0.8rem;">⚖️ Legal Notice</div>
+          <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:0.6rem 0.75rem;font-size:0.8rem;">🚦 Traffic Incident</div>
+          <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:0.6rem 0.75rem;font-size:0.8rem;">🏗️ Infrastructure</div>
+        </div>
 
-  <!-- Error + Loading (full width) -->
-  <div class="error-box" id="errorBox" role="alert"></div>
-  <div class="loading" id="loading">
-    <div class="spinner"></div>
-    <p>Gemini 2.5 Flash is analyzing your input...</p>
-  </div>
+        <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);font-weight:600;margin-bottom:0.75rem;">How it works</div>
+        <div style="display:flex;flex-direction:column;gap:0.5rem;">
+          <div style="display:flex;align-items:center;gap:0.75rem;font-size:0.82rem;">
+            <div style="width:22px;height:22px;border-radius:50%;background:var(--accent);color:white;display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:800;flex-shrink:0;">1</div>
+            <span style="color:var(--muted);">Paste messy text, upload an image, or record voice</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:0.75rem;font-size:0.82rem;">
+            <div style="width:22px;height:22px;border-radius:50%;background:var(--accent);color:white;display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:800;flex-shrink:0;">2</div>
+            <span style="color:var(--muted);">Gemini 2.5 Flash extracts intent and context</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:0.75rem;font-size:0.82rem;">
+            <div style="width:22px;height:22px;border-radius:50%;background:var(--accent);color:white;display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:800;flex-shrink:0;">3</div>
+            <span style="color:var(--muted);">Pydantic validates and structures the action plan</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:0.75rem;font-size:0.82rem;">
+            <div style="width:22px;height:22px;border-radius:50%;background:var(--accent);color:white;display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:800;flex-shrink:0;">4</div>
+            <span style="color:var(--muted);">Verified action steps saved to Firestore</span>
+          </div>
+        </div>
+      </div>
+    </div>
 
-  <!-- Results: two-col -->
-  <div class="two-col" id="resultPanel" style="display:none">
-    <div class="result-summary-card">
-      <div class="badges-row">
-        <span class="severity-badge" id="severityBadge"></span>
-        <span class="domain-badge" id="domainBadge"></span>
-        <span class="gap-badge" id="gapBadge" style="display:none"></span>
-      </div>
-      <div class="intent-text" id="intentSummary"></div>
-      <div class="confidence-row">
-        <div class="confidence-label">Confidence</div>
-        <div class="confidence-bar"><div class="confidence-fill" id="confidenceFill"></div></div>
-        <div class="confidence-val" id="confidenceVal"></div>
-      </div>
-      <div class="section-title">Verification Report</div>
-      <div class="verif-card" id="verifCard"></div>
-    </div>
-    <div>
-      <div class="section-title" id="actionTitle"></div>
-      <div class="actions-list" id="actionsGrid"></div>
-    </div>
   </div>
   </div>
 </div>
@@ -356,6 +400,7 @@
     sb.textContent = d.severity; sb.className = 'severity-badge severity-' + d.severity;
     document.getElementById('domainBadge').textContent = d.domain;
     document.getElementById('intentSummary').textContent = d.intent_summary;
+    document.getElementById('timestamp').textContent = new Date(d.timestamp).toLocaleString();
 
     const v = d.verification;
     const pct = Math.round(v.confidence_score * 100);
@@ -363,6 +408,9 @@
     document.getElementById('confidenceFill').style.cssText = `width:${pct}%;background:${color}`;
     document.getElementById('confidenceVal').style.color = color;
     document.getElementById('confidenceVal').textContent = pct + '%';
+    const vs = document.getElementById('verifiedStatus');
+    vs.textContent = v.verified ? '✓ Verified' : '✗ Unverified';
+    vs.style.color = v.verified ? 'var(--low)' : 'var(--critical)';
 
     const gb = document.getElementById('gapBadge');
     if (v.gaps?.length) { gb.textContent = '⚠ ' + v.gaps.length + ' Gap' + (v.gaps.length > 1 ? 's' : '') + ' Found'; gb.style.display = ''; }
@@ -391,8 +439,8 @@
     if (v.warnings?.length) vh += `<div style="font-size:0.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin:0.65rem 0 0.35rem;">Warnings</div><ul class="warn-list">${v.warnings.map(w=>`<li class="warn-item">⚠ ${w}</li>`).join('')}</ul>`;
     document.getElementById('verifCard').innerHTML = vh;
 
-    document.getElementById('resultPanel').style.display = 'grid';
-    document.getElementById('resultPanel').style.marginTop = '1.5rem';
+    document.getElementById('emptyState').style.display = 'none';
+    document.getElementById('resultPanel').style.display = 'block';
   }
 
   function setLoading(on) {
