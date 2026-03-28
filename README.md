@@ -9,3 +9,6 @@ PromptWars is a one-day vibe coding hackathon where you solve real problems usin
 Build a Gemini-powered App that solves for societal benefit by acting as a universal bridge between human intent and complex systems.
 
 Participants must create a functional interface that takes unstructured, messy. real-world inputs that can be anything (voice, traffic, weather, news, photos or a messy stack of medical history) and instantly converts them into structured, verified, and life-saving actions.
+
+
+# Main Challenge
