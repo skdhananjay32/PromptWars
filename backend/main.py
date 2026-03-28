@@ -18,7 +18,7 @@ app = FastAPI(title="Universal Intent Bridge - AI Logic Engine", version="1.0.0"
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:8000", "http://localhost:3000", "https://bridge-app-119835048295.us-central1.run.app"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

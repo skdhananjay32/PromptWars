@@ -7,9 +7,10 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg: #0a0a0f;
-      --surface: #111118;
-      --border: #1e1e2e;
+      --bg: #0d0d14;
+      --surface: #13131f;
+      --surface2: #1a1a28;
+      --border: #23233a;
       --accent: #6366f1;
       --accent2: #8b5cf6;
       --text: #e2e8f0;
@@ -21,311 +22,388 @@
     }
     body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; min-height: 100vh; }
 
-    header { border-bottom: 1px solid var(--border); padding: 1rem 2rem; display: flex; align-items: center; justify-content: space-between; }
+    /* ── Header ── */
+    header { border-bottom: 1px solid var(--border); padding: 0.85rem 2rem; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; background: rgba(7,7,15,0.85); backdrop-filter: blur(12px); z-index: 10; }
     .logo { display: flex; align-items: center; gap: 0.75rem; }
-    .logo-icon { width: 36px; height: 36px; background: linear-gradient(135deg, var(--accent), var(--accent2)); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
-    .logo-text h1 { font-size: 1.1rem; font-weight: 700; }
-    .logo-text p { font-size: 0.75rem; color: var(--muted); }
-    .status-badge { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; padding: 0.35rem 0.75rem; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); }
-    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+    .logo-icon { width: 38px; height: 38px; background: linear-gradient(135deg, var(--accent), var(--accent2)); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; box-shadow: 0 0 20px rgba(99,102,241,0.4); }
+    .logo-text h1 { font-size: 1.05rem; font-weight: 700; }
+    .logo-text p { font-size: 0.72rem; color: var(--muted); }
+    .status-badge { display: flex; align-items: center; gap: 0.5rem; font-size: 0.78rem; padding: 0.35rem 0.85rem; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); }
+    .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); transition: background 0.3s; }
     .status-dot.online { background: var(--low); box-shadow: 0 0 8px var(--low); }
-    .status-dot.offline { background: var(--critical); }
+    .status-dot.offline { background: var(--critical); box-shadow: 0 0 8px var(--critical); }
 
-    main { max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem; }
+    /* ── Hero ── */
+    .hero { text-align: center; padding: 3.5rem 1.5rem 2.5rem; }
+    .hero-tag { display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.78rem; color: var(--muted); border: 1px solid var(--border); border-radius: 999px; padding: 0.3rem 0.85rem; margin-bottom: 1.5rem; }
+    .hero-tag::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+    .hero h2 { font-size: clamp(2rem, 5vw, 3rem); font-weight: 800; line-height: 1.15; margin-bottom: 1rem; }
+    .hero h2 span { background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .hero p { color: var(--muted); max-width: 560px; margin: 0 auto; font-size: 1rem; line-height: 1.6; }
 
-    .scenarios { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; margin-bottom: 1.5rem; }
-    @media(max-width: 600px) { .scenarios { grid-template-columns: 1fr; } }
-    .scenario-btn { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 0.75rem 1rem; text-align: left; cursor: pointer; transition: border-color 0.2s, background 0.2s; color: var(--text); }
-    .scenario-btn:hover { border-color: var(--accent); background: #16162a; }
-    .scenario-btn .s-icon { font-size: 1.3rem; margin-bottom: 0.25rem; }
-    .scenario-btn .s-title { font-size: 0.85rem; font-weight: 600; }
-    .scenario-btn .s-desc { font-size: 0.75rem; color: var(--muted); margin-top: 0.2rem; }
+    /* ── Layout ── */
+    .container { max-width: 860px; margin: 0 auto; padding: 0 1.5rem 3rem; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    @media(max-width: 768px) { .two-col { grid-template-columns: 1fr; } }
+    .input-full { width: 100%; margin-bottom: 1.5rem; }
 
-    .input-section { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 1.25rem; margin-bottom: 1.5rem; }
-    .input-label { font-size: 0.8rem; color: var(--muted); margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.05em; }
-    textarea { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 0.85rem; color: var(--text); font-size: 0.9rem; resize: vertical; min-height: 120px; font-family: inherit; outline: none; transition: border-color 0.2s; }
+    /* ── Scenarios ── */
+    .section-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); font-weight: 600; margin-bottom: 0.75rem; text-align: center; }
+    .scenarios { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.6rem; margin-bottom: 1.5rem; }
+    @media(max-width: 700px) { .scenarios { grid-template-columns: repeat(2,1fr); } }
+    .scenario-btn { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 0.85rem 1rem; text-align: left; cursor: pointer; transition: border-color 0.2s, background 0.2s, transform 0.15s; color: var(--text); width: 100%; }
+    .scenario-btn:hover { border-color: var(--accent); background: #16162e; transform: translateY(-2px); box-shadow: 0 4px 20px rgba(99,102,241,0.12); }
+    .scenario-btn .s-icon { font-size: 1.4rem; margin-bottom: 0.4rem; display: block; }
+    .scenario-btn .s-title { font-size: 0.85rem; font-weight: 700; display: block; }
+    .scenario-btn .s-desc { font-size: 0.73rem; color: var(--muted); margin-top: 0.2rem; display: block; }
+
+    /* ── Input panel ── */
+    .input-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.25rem; }
+    .input-block { margin-bottom: 1rem; }
+    .input-block-label { font-size: 0.75rem; color: var(--muted); margin-bottom: 0.4rem; display: flex; align-items: center; gap: 0.4rem; }
+    textarea { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 0.85rem; color: var(--text); font-size: 0.88rem; resize: vertical; min-height: 130px; font-family: inherit; outline: none; transition: border-color 0.2s; line-height: 1.5; }
     textarea:focus { border-color: var(--accent); }
+    .char-count { font-size: 0.7rem; color: var(--muted); text-align: right; margin-top: 0.25rem; }
 
-    .input-row { display: flex; gap: 0.75rem; margin-top: 0.75rem; align-items: center; flex-wrap: wrap; }
-    .file-btn { display: flex; align-items: center; gap: 0.4rem; padding: 0.5rem 0.85rem; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; font-size: 0.8rem; color: var(--muted); transition: all 0.2s; }
-    .file-btn:hover { border-color: var(--accent); color: var(--text); }
-    .file-btn.active { border-color: var(--accent); color: var(--accent); }
-    .file-input { display: none; }
-    .record-btn { display: flex; align-items: center; gap: 0.4rem; padding: 0.5rem 0.85rem; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; font-size: 0.8rem; color: var(--muted); transition: all 0.2s; }
-    .record-btn.recording { border-color: var(--critical); color: var(--critical); animation: pulse 1.2s infinite; }
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
-    .submit-btn { margin-left: auto; padding: 0.6rem 1.5rem; background: linear-gradient(135deg, var(--accent), var(--accent2)); border: none; border-radius: 8px; color: white; font-weight: 600; cursor: pointer; font-size: 0.9rem; transition: opacity 0.2s, transform 0.1s; }
-    .submit-btn:hover { opacity: 0.9; transform: translateY(-1px); }
-    .submit-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+    /* Image drop zone */
+    .drop-zone { border: 1.5px dashed var(--border); border-radius: 10px; padding: 1.5rem; text-align: center; cursor: pointer; transition: border-color 0.2s, background 0.2s; background: var(--bg); position: relative; }
+    .drop-zone:hover, .drop-zone.drag-over { border-color: var(--accent); background: #0d0d1f; }
+    .drop-zone.has-file { border-color: var(--accent); border-style: solid; }
+    .drop-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+    .drop-zone-icon { font-size: 1.5rem; margin-bottom: 0.4rem; }
+    .drop-zone p { font-size: 0.8rem; color: var(--muted); }
+    .drop-zone p span { color: var(--accent); }
+    .drop-zone .file-name { font-size: 0.78rem; color: var(--accent); margin-top: 0.25rem; }
 
-    .loading { display: none; text-align: center; padding: 3rem; }
-    .spinner { width: 40px; height: 40px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 1rem; }
+    /* Voice */
+    .voice-section { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 0.85rem 1rem; display: flex; align-items: center; justify-content: space-between; }
+    .voice-label { font-size: 0.82rem; color: var(--muted); display: flex; align-items: center; gap: 0.4rem; }
+    .record-btn { display: flex; align-items: center; gap: 0.5rem; padding: 0.45rem 1rem; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; font-size: 0.8rem; color: var(--text); transition: all 0.2s; }
+    .record-btn:hover { border-color: var(--accent); }
+    .record-btn.recording { border-color: var(--critical); color: var(--critical); animation: pulse-rec 1s infinite; }
+    @keyframes pulse-rec { 0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0.4)} 50%{box-shadow:0 0 0 6px rgba(239,68,68,0)} }
+
+    .submit-btn { width: 100%; padding: 0.85rem; background: linear-gradient(135deg, var(--accent), var(--accent2)); border: none; border-radius: 10px; color: white; font-weight: 700; cursor: pointer; font-size: 0.95rem; transition: opacity 0.2s, transform 0.15s; margin-top: 1rem; letter-spacing: 0.02em; }
+    .submit-btn:hover { opacity: 0.92; transform: translateY(-1px); }
+    .submit-btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+    .scenario-btn:focus-visible, .submit-btn:focus-visible, .record-btn:focus-visible { outline: 2px solid var(--accent); }
+
+    /* ── Result panel ── */
+    .result-panel { display: none; }
+    .result-summary-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.25rem; margin-bottom: 1rem; }
+    .badges-row { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.85rem; }
+    .domain-badge { padding: 0.28rem 0.7rem; border-radius: 999px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; background: #1a1a3a; border: 1px solid var(--accent); color: var(--accent); }
+    .severity-badge { padding: 0.28rem 0.7rem; border-radius: 999px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; }
+    .severity-CRITICAL { background: #2a0808; color: var(--critical); border: 1px solid var(--critical); }
+    .severity-HIGH     { background: #2a1200; color: var(--high);     border: 1px solid var(--high); }
+    .severity-MEDIUM   { background: #2a2000; color: var(--medium);   border: 1px solid var(--medium); }
+    .severity-LOW      { background: #082a08; color: var(--low);      border: 1px solid var(--low); }
+    .gap-badge { padding: 0.28rem 0.7rem; border-radius: 999px; font-size: 0.72rem; font-weight: 600; background: #1a0a2a; border: 1px solid #6d28d9; color: #c084fc; }
+    .intent-text { font-size: 1rem; font-weight: 500; line-height: 1.55; color: var(--text); }
+    .confidence-row { display: flex; align-items: center; gap: 0.85rem; margin-top: 1rem; }
+    .confidence-label { font-size: 0.72rem; color: var(--muted); min-width: 80px; }
+    .confidence-bar { flex: 1; height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; }
+    .confidence-fill { height: 100%; border-radius: 3px; transition: width 0.6s ease; }
+    .confidence-val { font-size: 0.8rem; font-weight: 700; min-width: 2.5rem; text-align: right; }
+
+    .section-title { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); font-weight: 600; margin: 1.25rem 0 0.65rem; display: flex; align-items: center; gap: 0.5rem; }
+    .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+    .actions-list { display: flex; flex-direction: column; gap: 0.6rem; }
+    .action-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1rem 1.1rem; display: grid; grid-template-columns: 32px 1fr auto; gap: 0.75rem; align-items: start; transition: border-color 0.2s; }
+    .action-card:hover { border-color: #2a2a4a; }
+    .step-circle { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 800; flex-shrink: 0; margin-top: 0.1rem; }
+    .step-CRITICAL { background: #2a0808; color: var(--critical); border: 1px solid rgba(239,68,68,0.5); }
+    .step-HIGH     { background: #2a1200; color: var(--high);     border: 1px solid rgba(249,115,22,0.5); }
+    .step-MEDIUM   { background: #2a2000; color: var(--medium);   border: 1px solid rgba(234,179,8,0.5); }
+    .step-LOW      { background: #082a08; color: var(--low);      border: 1px solid rgba(34,197,94,0.5); }
+    .action-what { font-size: 0.88rem; font-weight: 600; line-height: 1.4; margin-bottom: 0.4rem; }
+    .action-meta { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    .meta-chip { font-size: 0.7rem; padding: 0.18rem 0.5rem; border-radius: 4px; background: var(--bg); border: 1px solid var(--border); color: var(--muted); white-space: nowrap; }
+    .priority-pill { padding: 0.2rem 0.55rem; border-radius: 999px; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.05em; align-self: start; white-space: nowrap; }
+    .pill-CRITICAL { background: #2a0808; color: var(--critical); border: 1px solid rgba(239,68,68,0.4); }
+    .pill-HIGH     { background: #2a1200; color: var(--high);     border: 1px solid rgba(249,115,22,0.4); }
+    .pill-MEDIUM   { background: #2a2000; color: var(--medium);   border: 1px solid rgba(234,179,8,0.4); }
+    .pill-LOW      { background: #082a08; color: var(--low);      border: 1px solid rgba(34,197,94,0.4); }
+
+    .verif-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1rem; }
+    .gap-list, .warn-list { list-style: none; display: flex; flex-direction: column; gap: 0.35rem; margin-top: 0.5rem; }
+    .gap-item  { font-size: 0.78rem; padding: 0.4rem 0.65rem; background: #130a20; border: 1px solid #3d1a5a; border-radius: 6px; color: #c084fc; }
+    .warn-item { font-size: 0.78rem; padding: 0.4rem 0.65rem; background: #1a1500; border: 1px solid #4a3800; border-radius: 6px; color: var(--medium); }
+
+    /* ── Loading ── */
+    .loading { display: none; text-align: center; padding: 3rem 1rem; }
+    .spinner { width: 44px; height: 44px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.75s linear infinite; margin: 0 auto 1rem; }
     @keyframes spin { to { transform: rotate(360deg); } }
+    .loading p { color: var(--muted); font-size: 0.88rem; }
 
-    .result { display: none; }
-    .result-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1.25rem; }
-    .domain-badge { padding: 0.3rem 0.75rem; border-radius: 999px; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em; background: #1e1e3a; border: 1px solid var(--accent); color: var(--accent); }
-    .severity-badge { padding: 0.3rem 0.75rem; border-radius: 999px; font-size: 0.75rem; font-weight: 700; }
-    .severity-CRITICAL { background: #2d0a0a; color: var(--critical); border: 1px solid var(--critical); }
-    .severity-HIGH { background: #2d1500; color: var(--high); border: 1px solid var(--high); }
-    .severity-MEDIUM { background: #2d2500; color: var(--medium); border: 1px solid var(--medium); }
-    .severity-LOW { background: #0a2d0a; color: var(--low); border: 1px solid var(--low); }
-    .intent-summary { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 8px; padding: 1rem; margin-bottom: 1.25rem; font-size: 0.95rem; line-height: 1.5; }
-
-    .section-title { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 0.75rem; font-weight: 600; }
-    .actions-grid { display: flex; flex-direction: column; gap: 0.65rem; margin-bottom: 1.25rem; }
-    .action-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1rem; display: grid; grid-template-columns: auto 1fr; gap: 0.75rem; align-items: start; }
-    .action-card:hover { border-color: #2e2e4e; }
-    .step-num { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; flex-shrink: 0; }
-    .step-CRITICAL { background: #2d0a0a; color: var(--critical); border: 1px solid var(--critical); }
-    .step-HIGH { background: #2d1500; color: var(--high); border: 1px solid var(--high); }
-    .step-MEDIUM { background: #2d2500; color: var(--medium); border: 1px solid var(--medium); }
-    .step-LOW { background: #0a2d0a; color: var(--low); border: 1px solid var(--low); }
-    .action-what { font-size: 0.9rem; font-weight: 600; margin-bottom: 0.4rem; }
-    .action-meta { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-    .meta-chip { font-size: 0.73rem; padding: 0.2rem 0.55rem; border-radius: 4px; background: var(--bg); border: 1px solid var(--border); color: var(--muted); }
-    .meta-chip span { color: var(--text); }
-
-    .verification-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1rem; margin-bottom: 1.25rem; }
-    .confidence-row { display: flex; align-items: center; gap: 1rem; margin-bottom: 0.75rem; }
-    .confidence-bar { flex: 1; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
-    .confidence-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--accent), var(--accent2)); transition: width 0.5s ease; }
-    .confidence-val { font-size: 0.85rem; font-weight: 700; min-width: 3rem; text-align: right; }
-    .verified-yes { color: var(--low); } .verified-no { color: var(--critical); }
-    .gap-list, .warn-list { list-style: none; display: flex; flex-direction: column; gap: 0.4rem; margin-top: 0.5rem; }
-    .gap-item { font-size: 0.8rem; padding: 0.4rem 0.65rem; background: #1a1020; border: 1px solid #3d1a3d; border-radius: 6px; color: #c084fc; }
-    .warn-item { font-size: 0.8rem; padding: 0.4rem 0.65rem; background: #1a1000; border: 1px solid #3d2d00; border-radius: 6px; color: var(--medium); }
-
-    .error-box { background: #1a0a0a; border: 1px solid var(--critical); border-radius: 10px; padding: 1rem; color: var(--critical); font-size: 0.85rem; margin-bottom: 1rem; display: none; }
+    .error-box { background: #1a0808; border: 1px solid rgba(239,68,68,0.5); border-radius: 10px; padding: 0.85rem 1rem; color: var(--critical); font-size: 0.82rem; margin-bottom: 1rem; display: none; }
   </style>
 </head>
 <body>
-  <header>
-    <div class="logo">
-      <div class="logo-icon">⚡</div>
-      <div class="logo-text">
-        <h1>Universal Intent Bridge</h1>
-        <p>Messy input → Verified action plan</p>
-      </div>
-    </div>
-    <div class="status-badge">
-      <div class="status-dot" id="statusDot"></div>
-      <span id="statusText">Checking...</span>
-    </div>
-  </header>
 
-  <main>
+<header>
+  <div class="logo">
+    <div class="logo-icon">⚡</div>
+    <div class="logo-text">
+      <h1>Universal Intent Bridge</h1>
+      <p>Powered by Gemini 2.5 Flash</p>
+    </div>
+  </div>
+  <div class="status-badge">
+    <div class="status-dot" id="statusDot"></div>
+    <span id="statusText">Checking...</span>
+  </div>
+</header>
+
+<div class="hero">
+  <div class="hero-tag">Messy Input → Structured, Verified, Life-Saving Action</div>
+  <h2>From Chaos to <span>Clarity</span></h2>
+  <p>Drop messy real-world data — scribbled notes, voice recordings, accident photos, crisis texts — and get instant structured action plans with Pydantic-verified outputs.</p>
+</div>
+
+<div class="container">
+    <div class="section-label">Try a Scenario</div>
     <div class="scenarios">
       <button class="scenario-btn" onclick="loadScenario('medical')">
-        <div class="s-icon">🏥</div>
-        <div class="s-title">Medical Emergency</div>
-        <div class="s-desc">Unconscious patient, possible stroke</div>
+        <span class="s-icon">🏥</span>
+        <span class="s-title">Medical Emergency</span>
+        <span class="s-desc">Unconscious patient, possible stroke</span>
       </button>
       <button class="scenario-btn" onclick="loadScenario('disaster')">
-        <div class="s-icon">🌊</div>
-        <div class="s-title">Disaster Coordination</div>
-        <div class="s-desc">Flood evacuation WhatsApp messages</div>
+        <span class="s-icon">🌊</span>
+        <span class="s-title">Disaster Coordination</span>
+        <span class="s-desc">Flood evacuation messages</span>
       </button>
       <button class="scenario-btn" onclick="loadScenario('mental')">
-        <div class="s-icon">🧠</div>
-        <div class="s-title">Mental Health Crisis</div>
-        <div class="s-desc">Distress message at 2am</div>
+        <span class="s-icon">🧠</span>
+        <span class="s-title">Mental Health Crisis</span>
+        <span class="s-desc">Distress message at 2am</span>
       </button>
       <button class="scenario-btn" onclick="loadScenario('legal')">
-        <div class="s-icon">⚖️</div>
-        <div class="s-title">Legal Notice</div>
-        <div class="s-desc">Cheque bounce Section 138 notice</div>
+        <span class="s-icon">⚖️</span>
+        <span class="s-title">Legal Notice</span>
+        <span class="s-desc">Cheque bounce Section 138</span>
       </button>
     </div>
 
-    <div class="input-section">
-      <div class="input-label">Describe the situation (text, or attach image/audio)</div>
-      <textarea id="textInput" placeholder="Paste messy text, describe a scene, paste a WhatsApp thread, medical notes..."></textarea>
-      <div class="input-row">
-        <label class="file-btn" id="imageLabel">
-          📷 Image
-          <input type="file" class="file-input" id="imageInput" accept="image/*" onchange="onFileChange('image')">
-        </label>
-        <label class="file-btn" id="audioLabel">
-          🎵 Audio
-          <input type="file" class="file-input" id="audioInput" accept="audio/*" onchange="onFileChange('audio')">
-        </label>
-        <button class="record-btn" id="recordBtn" onclick="toggleRecording()">🎙 Record</button>
-        <button class="submit-btn" id="submitBtn" onclick="submit()">Bridge Intent ⚡</button>
-      </div>
-    </div>
-
-    <div class="error-box" id="errorBox"></div>
-
-    <div class="loading" id="loading">
-      <div class="spinner"></div>
-      <p style="color:var(--muted);font-size:0.9rem;">Gemini is analyzing your input...</p>
-    </div>
-
-    <div class="result" id="result">
-      <div class="result-header">
-        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
-          <span class="domain-badge" id="domainBadge"></span>
-          <span class="severity-badge" id="severityBadge"></span>
+  <!-- Full-width Input -->
+  <div class="input-full">
+    <div class="input-panel">
+        <div class="input-block">
+          <div class="input-block-label">📝 Text / Paste Input</div>
+          <textarea id="textInput" placeholder="Paste messy text, scribbled notes, WhatsApp threads, medical history fragments..." oninput="updateCharCount()"></textarea>
+          <div class="char-count" id="charCount">0 chars</div>
         </div>
-        <span style="font-size:0.75rem;color:var(--muted);" id="timestamp"></span>
-      </div>
-      <div class="intent-summary" id="intentSummary"></div>
-      <div class="section-title">Action Plan</div>
-      <div class="actions-grid" id="actionsGrid"></div>
-      <div class="section-title">Verification Report</div>
-      <div class="verification-card" id="verificationCard"></div>
-    </div>
-  </main>
 
-  <script>
-    const SCENARIOS = {
-      medical: "Patient brought in at 11:45pm. Male, approx 58 yrs. Found unconscious near bus stop on MG Road. No ID on him. Bystander says he collapsed suddenly, may have hit his head. Breathing is shallow, pulse weak. Left side of face drooping. Not responding to name. Someone said he looked confused and was slurring words 20 mins before collapsing. No visible bleeding. Unknown medical history, no phone found. Ambulance en route but 15 min away. We have a first aid kit and AED on site.",
-      disaster: "pls help water level rising fast in sector 7 and 12!! families stuck on rooftops. old age home on main street also flooded ground floor. we have 2 boats but need more. roads blocked cant reach. children and elderly priority. last update 40 min ago things getting worse. contact raj 9876543210 he knows the area",
-      mental: "its 2am and i cant stop crying. i dont see the point anymore. i lost my job last week and my girlfriend left. i havent eaten in 2 days. i keep thinking everyone would be better off. i have pills in my drawer and i keep looking at them. i dont know why im even sending this",
-      legal: "received notice under section 138 NI act. cheque of rs 4,50,000 bounced dated 15 jan 2026. notice received 28 jan 2026. demand notice says pay within 15 days or face criminal complaint. i gave the cheque for a personal loan taken in 2024. i have some payment proofs. what do i do"
-    };
-
-    let mediaRecorder = null;
-    let audioChunks = [];
-    let recordedBlob = null;
-
-    async function checkHealth() {
-      try {
-        const r = await fetch('/api/health');
-        const d = await r.json();
-        const dot = document.getElementById('statusDot');
-        const txt = document.getElementById('statusText');
-        if (d.status === 'ok') {
-          dot.className = 'status-dot online';
-          txt.textContent = 'Backend Connected';
-        } else {
-          dot.className = 'status-dot offline';
-          txt.textContent = 'Backend Error';
-        }
-      } catch {
-        document.getElementById('statusDot').className = 'status-dot offline';
-        document.getElementById('statusText').textContent = 'Backend Offline';
-      }
-    }
-
-    function loadScenario(key) {
-      document.getElementById('textInput').value = SCENARIOS[key];
-    }
-
-    function onFileChange(type) {
-      const el = document.getElementById(type + 'Label');
-      const input = document.getElementById(type + 'Input');
-      if (input.files[0]) {
-        el.classList.add('active');
-        el.childNodes[0].textContent = (type === 'image' ? '📷 ' : '🎵 ') + input.files[0].name.slice(0, 12) + '…';
-      }
-    }
-
-    async function toggleRecording() {
-      const btn = document.getElementById('recordBtn');
-      if (mediaRecorder && mediaRecorder.state === 'recording') {
-        mediaRecorder.stop();
-        btn.classList.remove('recording');
-        btn.textContent = '🎙 Record';
-        return;
-      }
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        audioChunks = [];
-        mediaRecorder = new MediaRecorder(stream);
-        mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-        mediaRecorder.onstop = () => {
-          recordedBlob = new Blob(audioChunks, { type: 'audio/webm' });
-          btn.textContent = '🎙 Recorded ✓';
-          stream.getTracks().forEach(t => t.stop());
-        };
-        mediaRecorder.start();
-        btn.classList.add('recording');
-        btn.textContent = '⏹ Stop';
-      } catch {
-        alert('Microphone access denied');
-      }
-    }
-
-    async function submit() {
-      const text = document.getElementById('textInput').value.trim();
-      const imageFile = document.getElementById('imageInput').files[0];
-      const audioFile = document.getElementById('audioInput').files[0];
-      if (!text && !imageFile && !audioFile && !recordedBlob) {
-        showError('Please enter text or attach an image/audio file.');
-        return;
-      }
-
-      setLoading(true);
-      hideError();
-      document.getElementById('result').style.display = 'none';
-
-      const fd = new FormData();
-      if (text) fd.append('text_input', text);
-      if (imageFile) fd.append('image_file', imageFile);
-      if (audioFile) fd.append('audio_file', audioFile);
-      else if (recordedBlob) fd.append('audio_file', recordedBlob, 'recording.webm');
-
-      try {
-        const r = await fetch('/api/bridge', { method: 'POST', body: fd });
-        const data = await r.json();
-        if (!r.ok) throw new Error(data.detail || 'Unknown error');
-        renderResult(data);
-      } catch (e) {
-        showError(e.message);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    function renderResult(d) {
-      document.getElementById('domainBadge').textContent = d.domain;
-      const sb = document.getElementById('severityBadge');
-      sb.textContent = d.severity;
-      sb.className = 'severity-badge severity-' + d.severity;
-      document.getElementById('intentSummary').textContent = d.intent_summary;
-      document.getElementById('timestamp').textContent = new Date(d.timestamp).toLocaleString();
-
-      const grid = document.getElementById('actionsGrid');
-      grid.innerHTML = d.actions.map(a => `
-        <div class="action-card">
-          <div class="step-num step-${a.priority}">${a.step_number}</div>
-          <div>
-            <div class="action-what">${a.what}</div>
-            <div class="action-meta">
-              <div class="meta-chip">👤 <span>${a.who}</span></div>
-              <div class="meta-chip">⏱ <span>${a.when}</span></div>
-              <div class="meta-chip">📡 <span>${a.via}</span></div>
-            </div>
+        <div class="input-block">
+          <div class="input-block-label">🖼 Drop an Image or Click to Upload</div>
+          <div class="drop-zone" id="dropZone">
+            <input type="file" id="imageInput" accept="image/*" onchange="onImageChange()">
+            <div class="drop-zone-icon">📁</div>
+            <p><span>Click to upload</span> or drag & drop</p>
+            <p>Photos, scans, handwritten notes, accident scenes</p>
+            <div class="file-name" id="imageName"></div>
           </div>
-        </div>`).join('');
+        </div>
 
-      const v = d.verification;
-      const pct = Math.round(v.confidence_score * 100);
-      const color = pct >= 80 ? 'var(--low)' : pct >= 60 ? 'var(--medium)' : 'var(--critical)';
-      let html = `
-        <div class="confidence-row">
-          <div class="confidence-bar"><div class="confidence-fill" style="width:${pct}%;background:${color}"></div></div>
-          <div class="confidence-val" style="color:${color}">${pct}%</div>
-          <div style="font-size:0.8rem;" class="${v.verified ? 'verified-yes' : 'verified-no'}">${v.verified ? '✓ Verified' : '✗ Unverified'}</div>
-        </div>`;
-      if (v.gaps?.length) html += `<div style="font-size:0.75rem;color:var(--muted);margin-bottom:0.35rem;">GAPS</div><ul class="gap-list">${v.gaps.map(g => `<li class="gap-item"><b>${g.field}:</b> ${g.reason}</li>`).join('')}</ul>`;
-      if (v.warnings?.length) html += `<div style="font-size:0.75rem;color:var(--muted);margin-top:0.65rem;margin-bottom:0.35rem;">WARNINGS</div><ul class="warn-list">${v.warnings.map(w => `<li class="warn-item">⚠ ${w}</li>`).join('')}</ul>`;
-      document.getElementById('verificationCard').innerHTML = html;
+        <div class="input-block">
+          <div class="voice-section">
+            <div class="voice-label">🎙 Voice Input</div>
+            <button class="record-btn" id="recordBtn" onclick="toggleRecording()" aria-label="Record voice input" aria-pressed="false">🎤 Record Voice</button>
+          </div>
+        </div>
 
-      document.getElementById('result').style.display = 'block';
+        <button class="submit-btn" id="submitBtn" onclick="submit()" aria-label="Submit and analyze input with Gemini AI">⚡ Bridge Intent</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error + Loading (full width) -->
+  <div class="error-box" id="errorBox" role="alert"></div>
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    <p>Gemini 2.5 Flash is analyzing your input...</p>
+  </div>
+
+  <!-- Results: two-col -->
+  <div class="two-col" id="resultPanel" style="display:none">
+    <div class="result-summary-card">
+      <div class="badges-row">
+        <span class="severity-badge" id="severityBadge"></span>
+        <span class="domain-badge" id="domainBadge"></span>
+        <span class="gap-badge" id="gapBadge" style="display:none"></span>
+      </div>
+      <div class="intent-text" id="intentSummary"></div>
+      <div class="confidence-row">
+        <div class="confidence-label">Confidence</div>
+        <div class="confidence-bar"><div class="confidence-fill" id="confidenceFill"></div></div>
+        <div class="confidence-val" id="confidenceVal"></div>
+      </div>
+      <div class="section-title">Verification Report</div>
+      <div class="verif-card" id="verifCard"></div>
+    </div>
+    <div>
+      <div class="section-title" id="actionTitle"></div>
+      <div class="actions-list" id="actionsGrid"></div>
+    </div>
+  </div>
+  </div>
+</div>
+
+<script>
+  const SCENARIOS = {
+    medical: "Patient brought in at 11:45pm. Male, approx 58 yrs. Found unconscious near bus stop on MG Road. No ID on him. Bystander says he collapsed suddenly, may have hit his head. Breathing is shallow, pulse weak. Left side of face drooping. Not responding to name. Someone said he looked confused and was slurring words 20 mins before collapsing. No visible bleeding. Unknown medical history, no phone found. Ambulance en route but 15 min away. We have a first aid kit and AED on site.",
+    disaster: "pls help water level rising fast in sector 7 and 12!! families stuck on rooftops. old age home on main street also flooded ground floor. we have 2 boats but need more. roads blocked cant reach. children and elderly priority. last update 40 min ago things getting worse. contact raj 9876543210 he knows the area",
+    mental: "its 2am and i cant stop crying. i dont see the point anymore. i lost my job last week and my girlfriend left. i havent eaten in 2 days. i keep thinking everyone would be better off. i have pills in my drawer and i keep looking at them. i dont know why im even sending this",
+    legal: "received notice under section 138 NI act. cheque of rs 4,50,000 bounced dated 15 jan 2026. notice received 28 jan 2026. demand notice says pay within 15 days or face criminal complaint. i gave the cheque for a personal loan taken in 2024. i have some payment proofs. what do i do"
+  };
+
+  let mediaRecorder = null, audioChunks = [], recordedBlob = null;
+
+  async function checkHealth() {
+    try {
+      const r = await fetch('/api/health');
+      const d = await r.json();
+      const dot = document.getElementById('statusDot');
+      const txt = document.getElementById('statusText');
+      if (d.status === 'ok') { dot.className = 'status-dot online'; txt.textContent = 'Backend Connected'; }
+      else { dot.className = 'status-dot offline'; txt.textContent = 'Backend Error'; }
+    } catch {
+      document.getElementById('statusDot').className = 'status-dot offline';
+      document.getElementById('statusText').textContent = 'Backend Offline';
     }
+  }
 
-    function setLoading(on) {
-      document.getElementById('loading').style.display = on ? 'block' : 'none';
-      document.getElementById('submitBtn').disabled = on;
+  function loadScenario(k) {
+    document.getElementById('textInput').value = SCENARIOS[k];
+    updateCharCount();
+  }
+
+  function updateCharCount() {
+    const n = document.getElementById('textInput').value.length;
+    document.getElementById('charCount').textContent = n + ' chars';
+  }
+
+  function onImageChange() {
+    const f = document.getElementById('imageInput').files[0];
+    const dz = document.getElementById('dropZone');
+    const nm = document.getElementById('imageName');
+    if (f) { dz.classList.add('has-file'); nm.textContent = '✓ ' + f.name; }
+  }
+
+  const dz = document.getElementById('dropZone');
+  dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
+  dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
+  dz.addEventListener('drop', e => {
+    e.preventDefault(); dz.classList.remove('drag-over');
+    const f = e.dataTransfer.files[0];
+    if (f && f.type.startsWith('image/')) {
+      const dt = new DataTransfer(); dt.items.add(f);
+      document.getElementById('imageInput').files = dt.files;
+      onImageChange();
     }
-    function showError(msg) { const b = document.getElementById('errorBox'); b.textContent = '⚠ ' + msg; b.style.display = 'block'; }
-    function hideError() { document.getElementById('errorBox').style.display = 'none'; }
+  });
 
-    checkHealth();
-    setInterval(checkHealth, 15000);
-  </script>
+  async function toggleRecording() {
+    const btn = document.getElementById('recordBtn');
+    if (mediaRecorder && mediaRecorder.state === 'recording') {
+      mediaRecorder.stop(); btn.classList.remove('recording'); btn.textContent = '🎤 Record Voice'; btn.setAttribute('aria-pressed','false'); return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      audioChunks = [];
+      mediaRecorder = new MediaRecorder(stream);
+      mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+      mediaRecorder.onstop = () => {
+        recordedBlob = new Blob(audioChunks, { type: 'audio/webm' });
+        btn.textContent = '✓ Recorded';
+        stream.getTracks().forEach(t => t.stop());
+      };
+      mediaRecorder.start();
+      btn.classList.add('recording');
+      btn.textContent = '⏹ Stop Recording';
+      btn.setAttribute('aria-pressed','true');
+    } catch { alert('Microphone access denied'); }
+  }
+
+  async function submit() {
+    const text = document.getElementById('textInput').value.trim();
+    const imageFile = document.getElementById('imageInput').files[0];
+    if (!text && !imageFile && !recordedBlob) { showError('Please enter text or attach an image/audio.'); return; }
+
+    setLoading(true); hideError();
+    document.getElementById('resultPanel').style.display = 'none';
+    document.getElementById('resultPanel').style.marginTop = '0';
+
+    const fd = new FormData();
+    if (text) fd.append('text_input', text);
+    if (imageFile) fd.append('image_file', imageFile);
+    if (recordedBlob) fd.append('audio_file', recordedBlob, 'recording.webm');
+
+    try {
+      const r = await fetch('/api/bridge', { method: 'POST', body: fd });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.detail || 'Unknown error');
+      renderResult(data);
+    } catch(e) { showError(e.message); }
+    finally { setLoading(false); }
+  }
+
+  function renderResult(d) {
+    const sb = document.getElementById('severityBadge');
+    sb.textContent = d.severity; sb.className = 'severity-badge severity-' + d.severity;
+    document.getElementById('domainBadge').textContent = d.domain;
+    document.getElementById('intentSummary').textContent = d.intent_summary;
+
+    const v = d.verification;
+    const pct = Math.round(v.confidence_score * 100);
+    const color = pct >= 80 ? 'var(--low)' : pct >= 60 ? 'var(--medium)' : 'var(--critical)';
+    document.getElementById('confidenceFill').style.cssText = `width:${pct}%;background:${color}`;
+    document.getElementById('confidenceVal').style.color = color;
+    document.getElementById('confidenceVal').textContent = pct + '%';
+
+    const gb = document.getElementById('gapBadge');
+    if (v.gaps?.length) { gb.textContent = '⚠ ' + v.gaps.length + ' Gap' + (v.gaps.length > 1 ? 's' : '') + ' Found'; gb.style.display = ''; }
+    else gb.style.display = 'none';
+
+    document.getElementById('actionTitle').textContent = `Action Plan (${d.actions.length} steps)`;
+    document.getElementById('actionsGrid').innerHTML = d.actions.map(a => `
+      <div class="action-card">
+        <div class="step-circle step-${a.priority}">${a.step_number}</div>
+        <div>
+          <div class="action-what">${a.what}</div>
+          <div class="action-meta">
+            <span class="meta-chip">👤 ${a.who}</span>
+            <span class="meta-chip">⏱ ${a.when}</span>
+            <span class="meta-chip">📡 ${a.via}</span>
+          </div>
+        </div>
+        <span class="priority-pill pill-${a.priority}">${a.priority}</span>
+      </div>`).join('');
+
+    let vh = `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;">
+      <span style="font-size:0.82rem;color:var(--muted);">Status</span>
+      <span style="font-size:0.82rem;font-weight:600;color:${v.verified ? 'var(--low)' : 'var(--critical)'}">${v.verified ? '✓ Verified' : '✗ Gaps Detected'}</span>
+    </div>`;
+    if (v.gaps?.length) vh += `<div style="font-size:0.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.35rem;">Gaps</div><ul class="gap-list">${v.gaps.map(g=>`<li class="gap-item"><b>${g.field}:</b> ${g.reason}</li>`).join('')}</ul>`;
+    if (v.warnings?.length) vh += `<div style="font-size:0.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin:0.65rem 0 0.35rem;">Warnings</div><ul class="warn-list">${v.warnings.map(w=>`<li class="warn-item">⚠ ${w}</li>`).join('')}</ul>`;
+    document.getElementById('verifCard').innerHTML = vh;
+
+    document.getElementById('resultPanel').style.display = 'grid';
+    document.getElementById('resultPanel').style.marginTop = '1.5rem';
+  }
+
+  function setLoading(on) {
+    document.getElementById('loading').style.display = on ? 'block' : 'none';
+    document.getElementById('submitBtn').disabled = on;
+  }
+  function showError(m) { const b = document.getElementById('errorBox'); b.textContent = '⚠ ' + m; b.style.display = 'block'; }
+  function hideError() { document.getElementById('errorBox').style.display = 'none'; }
+
+  checkHealth();
+  setInterval(checkHealth, 15000);
+</script>
 </body>
 </html>
